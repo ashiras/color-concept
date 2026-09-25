@@ -4,19 +4,16 @@
   <meta charset="utf-8">
   <title>Color Concept | ロジカルなUIカラーパレットジェネレーター</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ロジカルな配色理論で導き出す、UIカラーパレットジェネレーター。生成されたカラーはSCSS変数としてダウンロード可能です。">
+  <meta name="description" content="ロジカルな配色理論で導き出す、UIカラーパレットジェネレーター。生成されたカラーはSCSS変数や生成AI用プロンプトとしてエクスポート可能です。">
 
   <!-- =========================================
        OGP & Twitter Cards
        ========================================= -->
   <meta property="og:title" content="Color Concept | ロジカルなUIカラーパレットジェネレーター">
-  <meta property="og:description" content="ロジカルな配色理論で導き出す、UIカラーパレットジェネレーター。生成されたカラーはSCSS変数としてダウンロード可能です。">
+  <meta property="og:description" content="ロジカルな配色理論で導き出す、UIカラーパレットジェネレーター。生成されたカラーはSCSSや生成AI用プロンプトとして利用可能です。">
   <meta property="og:type" content="website">
-
   <meta property="og:url" content="https://color-concept.ashiras.io/">
   <meta property="og:image" content="https://color-concept.ashiras.io/assets/images/ogp.png">
-  
-    
   <meta property="og:site_name" content="Color Concept">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Color Concept | ロジカルなUIカラーパレットジェネレーター">
@@ -296,35 +293,60 @@
     }
     .color-meta div { margin-bottom: 4px; }
 
-    /* Download Section */
-    .download-section {
+    /* Export Section */
+    .export-section {
       background: var(--card-bg);
       border-radius: var(--radius);
-      padding: 32px;
+      padding: 40px 32px;
       text-align: center;
       box-shadow: var(--shadow-md);
       border: 1px solid var(--border-color);
     }
-    .download-section p {
-      margin-bottom: 24px;
+    .export-section p {
+      margin-bottom: 32px;
       color: var(--text-muted);
     }
-    .btn-download {
-      background-color: var(--primary);
-      color: #fff;
-      border: none;
+    .action-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-action {
       padding: 16px 32px;
       border-radius: 8px;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 4px 14px 0 rgba(59, 114, 177, 0.39);
       transition: all 0.2s;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .btn-download:hover {
+    .btn-primary-action {
+      background-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 14px 0 rgba(59, 114, 177, 0.39);
+    }
+    .btn-primary-action:hover {
       background-color: #2c5a8e;
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(59, 114, 177, 0.23);
+    }
+    .btn-secondary-action {
+      background-color: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-secondary-action:hover {
+      background-color: #e2e8f0;
+      transform: translateY(-2px);
+    }
+    .btn-secondary-action.copied {
+      background-color: #10b981;
+      color: #fff;
+      border-color: #10b981;
     }
 
     /* Footer */
@@ -345,17 +367,20 @@
       line-height: 1.8;
       margin-bottom: 32px;
     }
+    .footer-concept{
+      font-size: 12px;
+    }
     .footer-copy {
       font-size: 12px;
       opacity: 0.7;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      padding-top: 24px;
     }
 
     /* Responsive */
     @media screen and (max-width: 600px) {
       .hero-section h1 { font-size: 24px; }
       .palette-grid { grid-template-columns: 1fr 1fr; }
+      .action-buttons { flex-direction: column; }
+      .btn-action { width: 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -363,7 +388,7 @@
 
   <!-- Header -->
   <header>
-    <h1>Color Concept</h1>
+      <h1>Color Concept</h1>
   </header>
 
   <!-- Main Content -->
@@ -442,18 +467,28 @@
     <h2 class="section-title">入力フォーム プレビュー</h2>
     <div id="inputCardsContainer" class="preview-grid"></div>
 
-    <!-- Download -->
-    <div class="download-section">
-      <h2 class="section-title" style="justify-content: center;">SCSS変数をエクスポート</h2>
-      <p>生成されたすべてのカラーコードをSCSSの変数ファイル（_color-variable.scss）としてダウンロードし、プロジェクトですぐに利用できます。</p>
-      <button id="btnDownload" class="btn-download">ファイルをダウンロード (.scss)</button>
+    <!-- Export -->
+    <div class="export-section">
+      <h2 class="section-title" style="justify-content: center;">プロジェクトに導入する</h2>
+      <p>生成されたカラーコードをSCSSとしてダウンロードするか、生成AI（ChatGPTやCursorなど）に読み込ませるプロンプトとしてクリップボードにコピーできます。</p>
+      
+      <div class="action-buttons">
+        <button id="btnDownload" class="btn-action btn-primary-action">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          SCSSをダウンロード
+        </button>
+        <button id="btnCopyPrompt" class="btn-action btn-secondary-action">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          生成AI用プロンプトをコピー
+        </button>
+      </div>
     </div>
 
   </main>
 
   <!-- Footer -->
   <footer>
-    <div class="footer-logo">Ashiras, inc.</div>
+    <div class="footer-concept">UI Color Palette Generator Based on Logical Color Theory</div>
     <div class="footer-copy">
       &copy; 2026 Ashiras, inc. All rights reserved.
     </div>
@@ -696,7 +731,8 @@
       });
     }
 
-    // --- SCSS Export ---
+    // --- Actions ---
+    // 1. SCSS Download
     document.getElementById('btnDownload').addEventListener('click', () => {
       const mainColor = picker.value;
       const accentColor = libs.getAccentColor(mainColor);
@@ -735,6 +771,51 @@ $font-inactive-color: rgba(153, 153, 153, 1);
       link.download = '_color-variable.scss';
       link.click();
       URL.revokeObjectURL(link.href);
+    });
+
+    // 2. Copy AI Prompt
+    document.getElementById('btnCopyPrompt').addEventListener('click', (e) => {
+      const mainColor = picker.value;
+      const mainRgba = libs.hex2rgba(mainColor);
+      const accentHex = libs.rgba2hex(libs.getAccentColor(mainColor));
+      const base1Hex = libs.rgba2hex(libs.baseColor2(mainColor));
+      const base2Hex = libs.rgba2hex(libs.baseColor(mainColor));
+      const errRgba = libs.errorColor(mainColor);
+      const errHex = libs.rgba2hex(errRgba);
+
+      const promptText = `あなたは優秀なフロントエンドエンジニア兼UI/UXデザイナーです。
+以下のカラーデザインシステムを厳密に適用して、モダンでアクセシビリティの高いUIコンポーネントを生成してください。
+
+【カラー定義 (Color Palette)】
+- Primary (メイン): ${mainColor}
+- Accent (アクセント): ${accentHex}
+- Background Light (背景色1): ${base1Hex}
+- Background Dark (背景色2): ${base2Hex}
+- Error (エラー): ${errHex}
+
+【テキストカラー】
+- 基本テキスト: ${libs.fontColor(libs.baseColor2(mainColor))}
+- エラーテキスト: ${errHex}
+
+【コンポーネントの配色ルール】
+- プライマリボタン: 背景色 ${mainColor} / 文字色 ${libs.buttonFontColor(mainRgba)}
+- アクセントボタン: 背景色 ${accentHex} / 文字色 ${libs.buttonFontColor(libs.getAccentColor(mainColor))}
+- 無効化(Disabled)要素: 背景色 #ececec / 文字色 #999999
+
+【指示】
+これらのカラーコードを変数化（またはTailwindのArbitrary valuesを利用）し、一貫性のある美しいデザインを出力してください。`;
+
+      navigator.clipboard.writeText(promptText).then(() => {
+        const btn = e.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.classList.add('copied');
+        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> プロンプトをコピーしました！`;
+        
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = originalText;
+        }, 2500);
+      });
     });
 
     // --- Init ---
