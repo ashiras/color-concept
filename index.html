@@ -99,7 +99,12 @@
       width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 600;
       cursor: pointer; margin-bottom: 16px; transition: all 0.2s ease;
     }
-    .btn-preview:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .btn-preview:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .btn-preview:disabled {
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
     
     .input-wrapper { margin-bottom: 16px; }
     .input-wrapper label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
@@ -201,7 +206,7 @@
       <div class="palette-item"><div id="palDisabledDark" class="palette-color-box">非活性 (Dark)</div><div class="palette-details"><div id="labelDisabledDark" class="value"></div></div></div>
     </div>
 
-    <!-- ★ 復活：配色理論 ★ -->
+    <!-- 配色理論 -->
     <h2 class="section-title">このパレットの配色理論</h2>
     <div class="theory-grid">
       <div class="theory-card">
@@ -221,7 +226,7 @@
       </div>
     </div>
 
-    <!-- ★ 復活：ボタンプレビュー ★ -->
+    <!-- ボタンプレビュー -->
     <h2 class="section-title">ボタンUI プレビュー</h2>
     <div id="buttonCardsContainer" class="preview-grid"></div>
 
@@ -335,35 +340,6 @@
         if (rgba[3] < 0.5) return '#222222';
         return (rgba[0]+rgba[1]+rgba[2])/3 > 127.5 ? '#222222' : '#ffffff';
       },
-      
-      /* ★ 復活：ボタン専用の文字色計算 ★ */
-      buttonFontColor(rgbaStr) {
-        const rgba = this.rgba2hexValue(rgbaStr);
-        if (rgba[3] < 0.5) return 'rgba(34, 34, 34, 1)';
-        const luma = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2];
-        return luma > 160 ? 'rgba(34, 34, 34, 1)' : 'rgba(255, 255, 255, 1)';
-      },
-
-      /* ★ 復活：マウスオーバー時のカラー計算用関数群 ★ */
-      choiceColor(bg, start, alpha) {
-        const val = parseInt(bg.substr(start, 2), 16);
-        return alpha > 0 ? Math.round(val * alpha) : Math.round((255 - val) * alpha);
-      },
-      pickupColor(bg, start, diff) {
-        const val = parseInt(bg.substr(start, 2), 16);
-        return Math.max(0, Math.min(255, val - diff)).toString(16);
-      },
-      subColor(bgColor, alpha = 1) {
-        if (!alpha) return bgColor;
-        const a0 = this.choiceColor(bgColor, 1, alpha), a1 = this.choiceColor(bgColor, 3, alpha), a2 = this.choiceColor(bgColor, 5, alpha);
-        const c0 = ('00' + this.pickupColor(bgColor, 1, a0)).slice(-2);
-        const c1 = ('00' + this.pickupColor(bgColor, 3, a1)).slice(-2);
-        const c2 = ('00' + this.pickupColor(bgColor, 5, a2)).slice(-2);
-        return `#${c0}${c1}${c2}`;
-      },
-      mouseorverColor(bgColor) {
-        return this.subColor(bgColor, 0.2); // 元のロジック復元
-      },
 
       errorColor(hex) { return this.adjustSemantic('#D93025', hex); },
       warningColor(hex) { return this.adjustSemantic('#E07A00', hex); },
@@ -412,16 +388,54 @@
       updateBox('ErrorDark', errDark); updateBox('WarningDark', warnDark); updateBox('SuccessDark', successDark);
       updateBox('DisabledDark', disabledDark);
 
+      /* =========================================
+         ボタンUIプレビュー生成（定義刷新版）
+         ========================================= */
+      const btnMainColor = libs.fontColor(mainRgba);
+      const btnAccentColor = libs.fontColor(accent);
+      const btnErrorColor = libs.fontColor(errRgba);
 
-      /* ★ 復活：ボタンUIプレビュー生成 ★ */
-      const btnMainColor = libs.buttonFontColor(mainRgba);
-      const btnAccentColor = libs.buttonFontColor(accent);
       const buttonData = [
-        { color: btnMainColor, backgroundColor: mainRgba, context: '基本ボタン' },
-        { color: btnAccentColor, backgroundColor: accent, context: 'アクセントボタン' },
-        { color: 'rgba(0, 0, 0, 1)', backgroundColor: 'rgba(204, 204, 204, 1)', context: 'キャンセル' },
-        { color: 'rgba(255, 255, 255, 1)', backgroundColor: 'rgba(128, 128, 128, 1)', context: '削除' },
-        { color: libs.fontColor(disabledRgba), backgroundColor: disabledRgba, context: '非活性', noHover: true }
+        {
+          context: 'プライマリ（確定・保存）',
+          backgroundColor: mainRgba,
+          hoverBg: mainDark,
+          color: btnMainColor,
+          border: 'none',
+          disabled: false
+        },
+        {
+          context: 'アクセント（注目・CTA）',
+          backgroundColor: accent,
+          hoverBg: accentDark,
+          color: btnAccentColor,
+          border: 'none',
+          disabled: false
+        },
+        {
+          context: '削除・危険（Danger）',
+          backgroundColor: errRgba,
+          hoverBg: errDark,
+          color: btnErrorColor,
+          border: 'none',
+          disabled: false
+        },
+        {
+          context: 'キャンセル（Secondary）',
+          backgroundColor: '#ffffff',
+          hoverBg: disabledPale,
+          color: '#334155',
+          border: `1px solid ${libs.rgba2hex(disabledRgba)}`,
+          disabled: false
+        },
+        {
+          context: '非活性（Disabled）',
+          backgroundColor: disabledPale,
+          hoverBg: disabledPale,
+          color: disabledDark,
+          border: 'none',
+          disabled: true
+        }
       ];
 
       const btnContainer = document.getElementById('buttonCardsContainer');
@@ -430,27 +444,32 @@
         const card = document.createElement('div');
         card.className = 'preview-card';
         card.style.backgroundColor = base2;
-        
-        let overHex = item.backgroundColor;
-        let overRgba = item.backgroundColor;
-        if (!item.noHover) {
-          overHex = libs.mouseorverColor(libs.rgba2hex(item.backgroundColor));
-          overRgba = libs.hex2rgba(overHex);
+
+        const btn = document.createElement('button');
+        btn.className = 'btn-preview';
+        btn.textContent = 'Button Label';
+        btn.style.backgroundColor = item.backgroundColor;
+        btn.style.color = item.color;
+        btn.style.border = item.border;
+        if (item.disabled) {
+          btn.disabled = true;
+        } else {
+          btn.onmouseover = () => { btn.style.backgroundColor = item.hoverBg; };
+          btn.onmouseout = () => { btn.style.backgroundColor = item.backgroundColor; };
         }
 
-        card.innerHTML = `
-          <h3>${item.context}</h3>
-          <button class="btn-preview" style="background-color: ${item.backgroundColor}; color: ${item.color};" 
-                  onmouseover="this.style.backgroundColor='${overHex}'" 
-                  onmouseout="this.style.backgroundColor='${item.backgroundColor}'">
-            Button Label
-          </button>
-          <div class="color-meta">
-            <div><strong>Text:</strong> ${item.color}</div>
-            <div><strong>BG (Default):</strong> ${item.backgroundColor}</div>
-            ${!item.noHover ? `<div><strong>BG (Hover):</strong> ${overRgba}</div>` : ''}
-          </div>
+        card.appendChild(document.createElement('h3')).textContent = item.context;
+        card.appendChild(btn);
+
+        const meta = document.createElement('div');
+        meta.className = 'color-meta';
+        meta.innerHTML = `
+          <div><strong>Text:</strong> ${item.color}</div>
+          <div><strong>BG (Default):</strong> ${item.backgroundColor}</div>
+          ${!item.disabled ? `<div><strong>BG (Hover):</strong> ${item.hoverBg}</div>` : ''}
+          ${item.border !== 'none' ? `<div><strong>Border:</strong> ${item.border}</div>` : ''}
         `;
+        card.appendChild(meta);
         btnContainer.appendChild(card);
       });
 
@@ -496,9 +515,11 @@
       const base1 = libs.baseColor(mainColor);
       const base2 = libs.baseColor2(mainColor);
 
-      // ホバー用の色計算
-      const btnMainOver = libs.hex2rgba(libs.mouseorverColor(mainColor));
-      const btnAccentOver = libs.hex2rgba(libs.mouseorverColor(libs.rgba2hex(accentRgba)));
+      const mainDark = libs.rgba2hex(libs.darkColor(mainRgba));
+      const accentDark = libs.rgba2hex(libs.darkColor(accentRgba));
+      const errorDark = libs.rgba2hex(libs.darkColor(errRgba));
+      const disabledDark = libs.rgba2hex(libs.darkColor(disabledRgba));
+      const disabledPale = libs.rgba2hex(libs.paleColor(disabledRgba));
 
       const scss = `// Base Colors
 $base-color: ${base2};
@@ -518,15 +539,15 @@ $accent-pale: ${libs.rgba2hex(libs.paleColor(accentRgba))};
 $error-pale: ${libs.rgba2hex(libs.paleColor(errRgba))};
 $warning-pale: ${libs.rgba2hex(libs.paleColor(warnRgba))};
 $success-pale: ${libs.rgba2hex(libs.paleColor(successRgba))};
-$disabled-pale: ${libs.rgba2hex(libs.paleColor(disabledRgba))};
+$disabled-pale: ${disabledPale};
 
 // Dark Tones (Borders, Text)
-$main-dark: ${libs.rgba2hex(libs.darkColor(mainRgba))};
-$accent-dark: ${libs.rgba2hex(libs.darkColor(accentRgba))};
-$error-dark: ${libs.rgba2hex(libs.darkColor(errRgba))};
+$main-dark: ${mainDark};
+$accent-dark: ${accentDark};
+$error-dark: ${errorDark};
 $warning-dark: ${libs.rgba2hex(libs.darkColor(warnRgba))};
 $success-dark: ${libs.rgba2hex(libs.darkColor(successRgba))};
-$disabled-dark: ${libs.rgba2hex(libs.darkColor(disabledRgba))};
+$disabled-dark: ${disabledDark};
 
 // Text Colors (On standard backgrounds)
 $text-on-base: ${libs.fontColor(base2)};
@@ -537,9 +558,17 @@ $text-on-warning: ${libs.fontColor(warnRgba)};
 $text-on-success: ${libs.fontColor(successRgba)};
 $text-on-disabled: ${libs.fontColor(disabledRgba)};
 
-// Button Hover Colors
-$button-over-color: ${btnMainOver};
-$button-accent-over-color: ${btnAccentOver};
+// Button Component Colors
+$btn-primary-bg: #{$main-color};
+$btn-primary-hover: #{$main-dark};
+$btn-accent-bg: #{$accent-color};
+$btn-accent-hover: #{$accent-dark};
+$btn-danger-bg: #{$color-error};
+$btn-danger-hover: #{$error-dark};
+$btn-cancel-border: #{$color-disabled};
+$btn-cancel-hover-bg: #{$disabled-pale};
+$btn-disabled-bg: #{$disabled-pale};
+$btn-disabled-text: #{$disabled-dark};
 `;
       const blob = new Blob([scss], { type: 'text/plain' });
       const link = document.createElement('a');
@@ -574,19 +603,12 @@ $button-accent-over-color: ${btnAccentOver};
 - Success: ${libs.rgba2hex(successRgba)} (Dark: ${libs.rgba2hex(libs.darkColor(successRgba))}, Pale: ${libs.rgba2hex(libs.paleColor(successRgba))})
 - Disabled: ${libs.rgba2hex(disabledRgba)} (Dark: ${libs.rgba2hex(libs.darkColor(disabledRgba))}, Pale: ${libs.rgba2hex(libs.paleColor(disabledRgba))})
 
-【テキストカラー (それぞれの背景色の上に載せる文字色)】
-- ベース背景用: ${libs.fontColor(base2)}
-- Primary背景用: ${libs.fontColor(mainRgba)}
-- Accent背景用: ${libs.fontColor(accentRgba)}
-- Error背景用: ${libs.fontColor(errRgba)}
-- Warning背景用: ${libs.fontColor(warnRgba)}
-- Success背景用: ${libs.fontColor(successRgba)}
-- Disabled背景用: ${libs.fontColor(disabledRgba)}
-
-【コンポーネントの配色ルール】
-- フォームエラー時: 背景色 Error(Pale) / 枠線 Error(通常) / テキスト Error(Dark)
-- プライマリボタン: 背景色 Primary(通常) / テキスト色 Primary背景用 / ホバー時 Primary(Dark)
-- 無効化(Disabled)要素: 背景色 Disabled(Pale) / 枠線 Disabled(通常) / テキスト Disabled(Dark)
+【ボタンの配色ルール】
+- プライマリボタン: 背景色 Primary(通常) / テキスト色 ${libs.fontColor(mainRgba)} / ホバー時 Primary(Dark)
+- アクセントボタン: 背景色 Accent(通常) / テキスト色 ${libs.fontColor(accentRgba)} / ホバー時 Accent(Dark)
+- 削除(Danger)ボタン: 背景色 Error(通常) / テキスト色 ${libs.fontColor(errRgba)} / ホバー時 Error(Dark)
+- キャンセルボタン: 背景色 #ffffff / 枠線 Disabled(通常) / テキスト色 #334155 / ホバー時 Disabled(Pale)
+- 非活性ボタン: 背景色 Disabled(Pale) / テキスト色 Disabled(Dark) / 枠線なし / cursor: not-allowed
 
 【指示】
 これらのカラーコードを変数化し、統一感とメリハリのある美しいデザインを出力してください。`;
